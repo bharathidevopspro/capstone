@@ -1,22 +1,43 @@
 pipeline {
-    agent any
+  agent any
 
-    stages {
+  environment {
+    DOCKER_IMAGE = "bharathyyy/myapp:latest"
+  }
 
-        stage('Build Docker Image') {
-            steps {
-                sh 'docker build -t devops-app .'
-            }
-        }
+  stages {
 
-        stage('Run Container') {
-            steps {
-                sh '''
-                docker rm -f devops-container || true
-                docker run -d -p 8080:80 --name devops-container devops-app
-                '''
-            }
-        }
-
+    stage('Clone') {
+      steps {
+        git 'https://github.com/yourusername/your-repo.git'
+      }
     }
+
+    stage('Docker Login') {
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+          sh 'echo $PASS | docker login -u $USER --password-stdin'
+        }
+      }
+    }
+
+    stage('Build Image') {
+      steps {
+        sh 'docker build -t $DOCKER_IMAGE .'
+      }
+    }
+
+    stage('Push Image') {
+      steps {
+        sh 'docker push $DOCKER_IMAGE'
+      }
+    }
+
+    stage('Deploy to Kubernetes') {
+      steps {
+        sh 'kubectl apply -f k8s/'
+      }
+    }
+
+  }
 }
