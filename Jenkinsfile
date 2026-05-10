@@ -9,7 +9,8 @@ pipeline {
 
     stage('Clone') {
       steps {
-        git 'https://github.com/bharathidevopspro/capstone.git'
+        git branch: 'main',
+        url: 'https://github.com/bharathidevopspro/capstone.git'
       }
     }
 
